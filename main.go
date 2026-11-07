@@ -34,14 +34,13 @@ func (c *cmdi) Run() {
 // If input is piped and "-m" is an empty string, it reads from stdin
 // and uses the piped input as the message.
 func (c *cmdi) deferMsg() string {
-	var msg string
-	if isPipedStdin() {
-		msg = string(must.Eval(io.ReadAll(os.Stdin)))
-	}
 	if c.notify.msg != "" {
-		msg = c.notify.msg
+		return c.notify.msg
 	}
-	return msg
+	if isPipedStdin() {
+		return string(must.Eval(io.ReadAll(os.Stdin)))
+	}
+	return ""
 }
 
 func isPipedStdin() bool {
