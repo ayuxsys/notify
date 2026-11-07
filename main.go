@@ -40,7 +40,7 @@ func (c *cmdi) deferMsg() string {
 	if isPipedStdin() {
 		return string(must.Eval(io.ReadAll(os.Stdin)))
 	}
-	return ""
+	return "unknown"
 }
 
 func isPipedStdin() bool {
