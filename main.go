@@ -1,8 +1,12 @@
 package main
 
 import (
+	"io"
+	"os"
+
 	"github.com/ayuxsys/notify/config"
 	"github.com/ayuxsys/notify/log"
+	"github.com/ayuxsys/notify/must"
 	"github.com/ayuxsys/notify/notifier"
 )
 
@@ -19,9 +23,28 @@ func main() {
 func (c *cmdi) Run() {
 	notify := notifier.New(config.Load(c.cfgFile))
 	notify.File = c.notify.file
-	notify.Msg = c.notify.msg
+	notify.Msg = c.deferMsg()
 
 	if err := notify.Telegram(); err != nil {
 		log.Error.Fatal(err)
 	}
+}
+
+// deferMsg determines which input to use as the message for deferMsg.
+// If input is piped and "-m" is an empty string, it reads from stdin
+// and uses the piped input as the message.
+func (c *cmdi) deferMsg() string {
+	var msg string
+	if isPipedStdin() {
+		msg = string(must.Eval(io.ReadAll(os.Stdin)))
+	}
+	if c.notify.msg != "" {
+		msg = c.notify.msg
+	}
+	return msg
+}
+
+func isPipedStdin() bool {
+	fi := must.Eval(os.Stdin.Stat())
+	return (fi.Mode() & os.ModeCharDevice) == 0
 }
